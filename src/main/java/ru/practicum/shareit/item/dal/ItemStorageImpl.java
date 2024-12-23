@@ -37,7 +37,7 @@ public class ItemStorageImpl implements ItemStorage {
     @Override
     public Collection<Item> getAllItemsOfUser(User owner) {
         return items.values().stream()
-                .filter(item -> item.getOwner().equals(owner))
+                .filter(item -> item.getOwner().getId().equals(owner.getId()))
                 .collect(Collectors.toList());
     }
 

@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.EmailValidationException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -20,11 +21,17 @@ public class UserServiceImpl implements UserService {
     private final UserStorage userStorage;
 
     @Override
-    public UserDto createUser(User user) {
+    public UserDto createUser(UserDto userDto) {
         log.info("Попытка создания пользователя");
+        User user = UserMapper.toUser(userDto);
         if (user.getEmail() == null) {
             throw new ValidationException("При создании пользователя почта должна быть указана!");
         }
+
+        if (!EmailValidator.getInstance().isValid(user.getEmail())) {
+            throw new ValidationException("Почта указана неверно!");
+        }
+
         if (userStorage.isEmailTaken(user)) {
             throw new EmailValidationException("Email уже используется!");
         }
@@ -39,8 +46,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto updateUser(Long id, User user) {
+    public UserDto updateUser(Long id, UserDto userDto) {
         log.info("Попытка обновить пользователя");
+        User user = UserMapper.toUser(userDto);
         User userFromStorage = userStorage.getUser(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с айди " + id + " не найден!"));
         if (userStorage.isEmailTaken(user)) {
