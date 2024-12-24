@@ -2,7 +2,6 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.validator.routines.EmailValidator;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.EmailValidationException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -27,11 +26,6 @@ public class UserServiceImpl implements UserService {
         if (user.getEmail() == null) {
             throw new ValidationException("При создании пользователя почта должна быть указана!");
         }
-
-        if (!EmailValidator.getInstance().isValid(user.getEmail())) {
-            throw new ValidationException("Почта указана неверно!");
-        }
-
         if (userStorage.isEmailTaken(user)) {
             throw new EmailValidationException("Email уже используется!");
         }
