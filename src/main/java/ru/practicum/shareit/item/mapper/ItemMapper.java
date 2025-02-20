@@ -2,9 +2,14 @@ package ru.practicum.shareit.item.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemCommentsDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
+
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
@@ -14,7 +19,7 @@ public class ItemMapper {
         itemDto.setName(item.getName());
         itemDto.setDescription(item.getDescription());
         itemDto.setAvailable(item.getAvailable());
-        itemDto.setRequest(item.getRequest() != null ? item.getRequest().getId() : null);
+        itemDto.setOwner(UserMapper.userToDto(item.getOwner()));
         return itemDto;
     }
 
@@ -25,5 +30,15 @@ public class ItemMapper {
         item.setAvailable(itemDto.getAvailable());
         item.setOwner(owner);
         return item;
+    }
+
+    public static ItemCommentsDto toItemCommentsDto(Item item, List<CommentDto> comments) {
+        ItemCommentsDto dto = new ItemCommentsDto();
+        dto.setId(item.getId());
+        dto.setName(item.getName());
+        dto.setDescription(item.getDescription());
+        dto.setAvailable(item.getAvailable());
+        dto.setComments(comments);
+        return dto;
     }
 }
