@@ -2,7 +2,9 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dal.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.enums.Status;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -38,6 +41,7 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
 
     @Override
+    @Transactional
     public ItemDto createItem(ItemDto itemDto, Long userId) {
         log.info("Попытка создания вещи");
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден!"));
@@ -56,10 +60,10 @@ public class ItemServiceImpl implements ItemService {
 
         ItemCommentsDto itemCommentsDto = ItemMapper.toItemCommentsDto(item, commentsDto);
 
-        Optional<Booking> last = bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStartDesc(itemId,
-                Status.APPROVED, LocalDateTime.now());
-        Optional<Booking> next = bookingRepository.findFirstByItemIdAndStatusAndStartAfterOrderByStart(itemId,
-                Status.APPROVED, LocalDateTime.now());
+        Optional<Booking> last = bookingRepository.findFirstByItemIdAndStatusAndStartAfter(itemId,
+                Status.APPROVED, LocalDateTime.now(), Sort.by("start").descending());
+        Optional<Booking> next = bookingRepository.findFirstByItemIdAndStatusAndStartAfter(itemId,
+                Status.APPROVED, LocalDateTime.now(), Sort.by("start"));
 
         itemCommentsDto.setLastBooking(last.map(Booking::getEnd).orElse(null));
         itemCommentsDto.setNextBooking(next.map(Booking::getStart).orElse(null));
@@ -68,6 +72,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public void deleteItem(Long itemId) {
         log.info("Удаление вещи с айди {}", itemId);
         Item item = itemRepository.findById(itemId)
@@ -76,6 +81,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public ItemDto updateItem(ItemDto itemDto, Long userId, Long itemId) {
         log.info("Попытка обновления данных по вещи с айди {}", itemId);
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден!"));
@@ -114,13 +120,14 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return List.of();
         }
-        return itemRepository.findByNameContainingIgnoreCaseAndAvailableTrueOrDescriptionContainingIgnoreCaseAndAvailableTrue(text, text)
+        return itemRepository.findItemByText(text)
                 .stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toSet());
     }
 
     @Override
+    @Transactional
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
         User user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден!"));
         Item item = itemRepository.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь не найдена!"));

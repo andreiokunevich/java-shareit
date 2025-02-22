@@ -9,12 +9,13 @@ import ru.practicum.shareit.booking.service.interfaces.BookingService;
 
 import java.util.Collection;
 
+import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
+
 @RestController
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
 public class BookingController {
     private final BookingService bookingService;
-    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
 
     @GetMapping
     public Collection<BookingDto> getAllBookingsUser(@RequestHeader(USER_ID_HEADER) Long userId,
